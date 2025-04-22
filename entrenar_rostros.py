@@ -1,26 +1,31 @@
 import face_recognition
-import pickle
 import os
+import pickle
+from PIL import Image
 
-# Cargar rostros entrenados existentes
-if os.path.exists("rostros_entrenados.pkl"):
-    with open("rostros_entrenados.pkl", "rb") as archivo:
-        rostros_codificados, nombres = pickle.load(archivo)
-else:
-    rostros_codificados = []
-    nombres = []
+directorio_rostros = "rostros_conocidos"
+rostros = []
+nombres = []
 
-# Cargar la nueva imagen
-nueva_imagen = face_recognition.load_image_file("rostros_conocidos/Doris Garcia.jpeg")
-nuevos_codificados = face_recognition.face_encodings(nueva_imagen)
+for nombre_archivo in os.listdir(directorio_rostros):
+    ruta = os.path.join(directorio_rostros, nombre_archivo)
+    imagen = face_recognition.load_image_file(ruta)
+    codificaciones = face_recognition.face_encodings(imagen)
+    
+    if codificaciones:
+        rostros.append(codificaciones[0])
+        nombre = os.path.splitext(nombre_archivo)[0]
+        nombres.append(nombre)
+    else:
+        print(f"No se encontró un rostro en {nombre_archivo}")
 
-# Si se encuentran rostros, agregar a los datos
-if nuevos_codificados:
-    rostros_codificados.append(nuevos_codificados[0])
-    nombres.append("Nuevo Nombre")  # El nombre del nuevo rostro
+# Guardar como diccionario
+datos_entrenados = {
+    "rostros": rostros,
+    "nombres": nombres
+}
 
-# Guardar los datos actualizados
-with open("rostros_entrenados.pkl", "wb") as archivo:
-    pickle.dump([rostros_codificados, nombres], archivo)
+with open("rostros_entrenados.pkl", "wb") as f:
+    pickle.dump(datos_entrenados, f)
 
-print("Nuevo rostro registrado correctamente.")
+print("Entrenamiento completado y datos guardados en 'rostros_entrenados.pkl'")
